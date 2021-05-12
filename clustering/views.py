@@ -33,13 +33,19 @@ def build_2d(df, bound_form):
 
 def clustering(df, bound_form):
     try:
-        data_property = k_mxt_w3.data.DataPropertyImportSpace(df)
-        x, y, features = data_property.get_data(name_latitude_cols=bound_form.cleaned_data['latitude'],
-                                                name_longitude_cols=bound_form.cleaned_data['longitude'],
-                                                features_list=bound_form.cleaned_data['features'])
-        clusters = k_mxt_w3.clusters_data.ClustersDataSpaceFeaturesEuclidean(x_init=x,
-                                                                             y_init=y,
-                                                                             features_init=features)
+        # data_property = k_mxt_w3.data.DataPropertyImportSpace(df)
+        x, y, features = k_mxt_w3.data.DataPropertyImportSpace.get_data(
+            df=df,
+            name_latitude_cols=bound_form.cleaned_data['latitude'],
+            name_longitude_cols=bound_form.cleaned_data['longitude'],
+            features_list=bound_form.cleaned_data['features'],
+        )
+        clusters = k_mxt_w3.clusters_data.ClustersDataSpaceFeatures(
+            x_init=x,
+            y_init=y,
+            features_init=features,
+            metrics='euclidean',
+        )
         algorithm = None
         if bound_form.cleaned_data['algorithm'] == 'k_mxt_w3':
             algorithm = k_mxt_w3.clustering_algorithms.K_MXT_gauss
@@ -63,7 +69,7 @@ def clustering(df, bound_form):
         fig.update_layout(margin={"r": 0, "t": 0, "l": 0, "b": 0})
         plt_clusters = plot(fig, output_type='div', show_link=False, link_text='', )
     except Exception as e:
-        pass
+        raise
     return plt_clusters
 
 
