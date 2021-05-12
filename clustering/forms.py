@@ -36,5 +36,5 @@ class AlgorithmForm(forms.Form):
         self.fields['features'] = forms.MultipleChoiceField(label='features', choices=self.choices,
                                                             widget=forms.CheckboxSelectMultiple(
                                                                 attrs={'class': 'form-check-input'}),
-                                                            required=True,
+                                                            required=False,
                                                             )

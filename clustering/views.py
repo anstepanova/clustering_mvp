@@ -13,27 +13,34 @@ import k_mxt_w3
 
 def build_2d(df, bound_form):
     try:
-        fig_2d = px.scatter_mapbox(df,
-                                   lat=bound_form.cleaned_data['latitude'],
-                                   lon=bound_form.cleaned_data['longitude'],
-                                   hover_name=bound_form.cleaned_data['features'][0],
-                                   hover_data=bound_form.cleaned_data['features'],
-                                   color=bound_form.cleaned_data['features'][0],
-                                   zoom=5,
-                                   height=1000,
-                                   color_continuous_scale=px.colors.cyclical.IceFire,
-                                   )
+        if len(bound_form.cleaned_data['features']) == 0:
+            fig_2d = px.scatter_mapbox(df,
+                                       lat=bound_form.cleaned_data['latitude'],
+                                       lon=bound_form.cleaned_data['longitude'],
+                                       zoom=5,
+                                       height=1000,
+                                       )
+        else:
+            fig_2d = px.scatter_mapbox(df,
+                                       lat=bound_form.cleaned_data['latitude'],
+                                       lon=bound_form.cleaned_data['longitude'],
+                                       hover_name=bound_form.cleaned_data['features'][0],
+                                       hover_data=bound_form.cleaned_data['features'],
+                                       color=bound_form.cleaned_data['features'][0],
+                                       zoom=5,
+                                       height=1000,
+                                       color_continuous_scale=px.colors.cyclical.IceFire,
+                                       )
         fig_2d.update_layout(mapbox_style="open-street-map")
         fig_2d.update_layout(margin={"r": 0, "t": 0, "l": 0, "b": 0})
         plt_2d = plot(fig_2d, output_type='div', show_link=False, link_text='', )
+        return plt_2d
     except Exception as e:
         pass
-    return plt_2d
 
 
 def clustering(df, bound_form):
     try:
-        # data_property = k_mxt_w3.data.DataPropertyImportSpace(df)
         x, y, features = k_mxt_w3.data.DataPropertyImportSpace.get_data(
             df=df,
             name_latitude_cols=bound_form.cleaned_data['latitude'],
