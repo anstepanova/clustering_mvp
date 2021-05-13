@@ -40,6 +40,8 @@ def build_2d(df, bound_form):
 
 
 def clustering(df, bound_form):
+    modularity = None
+    clustering_result = None
     try:
         x, y, features = k_mxt_w3.data.DataPropertyImportSpace.get_data(
             df=df,
@@ -62,6 +64,8 @@ def clustering(df, bound_form):
                         eps=bound_form.cleaned_data['eps'],
                         clusters_data=clusters)
         alg()
+        modularity = alg.clusters_data.calculate_modularity(alg.start_graph)
+        clustering_result = alg.clusters_data.cluster_numbers
         fig = px.scatter_mapbox(df,
                                 lat=bound_form.cleaned_data['latitude'],
                                 lon=bound_form.cleaned_data['longitude'],
@@ -77,7 +81,7 @@ def clustering(df, bound_form):
         plt_clusters = plot(fig, output_type='div', show_link=False, link_text='', )
     except Exception as e:
         raise
-    return plt_clusters
+    return plt_clusters, modularity, clustering_result
 
 
 class AlgorithmView(LoginRequiredMixin, View):
@@ -114,12 +118,15 @@ class AlgorithmView(LoginRequiredMixin, View):
             bound_form = AlgorithmForm(choices, request.POST)
             if bound_form.is_valid():
                 plt_2d = build_2d(df, bound_form)
-                plt_clusters = clustering(df, bound_form)
+                plt_clusters, modularity, clustering_result = clustering(df, bound_form)
                 return render(request, self.template,
                               context={'form': bound_form,
                                        'is_visible': True,
                                        'plt_2d': plt_2d,
-                                       'plt_clusters': plt_clusters})
+                                       'plt_clusters': plt_clusters,
+                                       'modularity': modularity,
+                                       'clustering_result': clustering_result,
+                                       })
             else:
                 return render(request, self.template, context={'form': bound_form, 'is_visible': True})
         return render(request, self.template, context={'form': bound_form, 'is_visible': False})

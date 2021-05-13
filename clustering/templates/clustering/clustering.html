@@ -23,7 +23,7 @@
             </div>
         {% endif %}
         {% if is_visible %}
-             <div class="form-row">
+             <div class="form-row mb-3">
                 <div class="col-md-1 mb-3">
                   <label for="k">k</label>
                         {{ form.k }}
@@ -57,6 +57,20 @@
             </div>
         {% endif %}
     </form>
+    <table class="table table-sm mt-2 mb-2">
+      <tbody>
+        {% if modularity %}
+            <tr>
+              <td>Modularity metric (clustering quality)</td>
+              <td>{{ modularity }}</td>
+              <td></td>
+            </tr>
+        {% endif %}
+      </tbody>
+    </table>
+    {% if clustering_result is not null %}
+      <button class="btn btn-success btn-sm" type="submit" name="_download">Download clustering result</button>
+   {% endif %}
     {% if plt_2d or plt_clusters%}
             <div>
                 <ul class="nav nav-pills mb-3 mt-3" id="pills-tab" role="tablist">
