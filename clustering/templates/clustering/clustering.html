@@ -82,8 +82,8 @@
         {% endif %}
       </tbody>
     </table>
-    {% if clustering_result is not null %}
-      <button class="btn btn-success btn-sm" type="submit" name="_download">Download clustering result</button>
+    {% if filepath is not null %}
+      <p><a href="{% url 'download_file_url' filepath=filepath %}">Download clustering result as json-file</a></p>
    {% endif %}
     {% if plt_2d or plt_clusters%}
             <div>

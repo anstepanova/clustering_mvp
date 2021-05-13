@@ -1,10 +1,14 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core.files.base import ContentFile
+from django.core.files.storage import default_storage, get_storage_class
+from django.http import HttpResponse
 from django.views.generic import View
 from .forms import *
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 import pandas as pd
 import plotly.express as px
+import json
 from plotly.offline import plot
 import numpy as np
 import k_mxt_w3
@@ -52,7 +56,9 @@ class Clustering:
     def save_clustering_result_in_file(self):
         if self.alg is None:
             raise AttributeError('clustering result is not calculated')
-        np.savetxt(f'clustering_result.csv', self.alg.clusters_data.cluster_numbers, delimiter=",")
+        clustering_result_str = json.dumps(self.alg.clusters_data.cluster_numbers.tolist())
+        path = default_storage.save('clustering_result.json', ContentFile(clustering_result_str))
+        return path
 
     def calculate_clustering_result(self):
         x, y, features = k_mxt_w3.data.DataPropertyImportSpace.get_data(
@@ -133,7 +139,7 @@ class AlgorithmView(LoginRequiredMixin, View):
                 clustering = Clustering(df=df, bound_form=bound_form)
                 plt_2d = build_2d(df, bound_form)
                 clustering_result = clustering.calculate_clustering_result()
-                clustering.save_clustering_result_in_file()
+                path = clustering.save_clustering_result_in_file()
                 plt_clusters = clustering.build_clusters()
                 modularity = clustering.calculate_modularity()
                 return render(request, self.template,
@@ -142,8 +148,16 @@ class AlgorithmView(LoginRequiredMixin, View):
                                        'plt_2d': plt_2d,
                                        'plt_clusters': plt_clusters,
                                        'modularity': modularity,
-                                       'clustering_result': clustering_result,
+                                       # 'clustering_result': clustering_result,
+                                       'filepath': path
                                        })
             else:
                 return render(request, self.template, context={'form': bound_form, 'is_visible': True})
         return render(request, self.template, context={'form': bound_form, 'is_visible': False})
+
+
+def download_file(request, filepath):
+    file = open(filepath)
+    response = HttpResponse(file, content_type='json')
+    response['Content-Disposition'] = f"attachment; filename={filepath}"
+    return response
