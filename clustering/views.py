@@ -39,15 +39,21 @@ def build_2d(df, bound_form):
         pass
 
 
-def clustering(df, bound_form):
-    modularity = None
-    clustering_result = None
-    try:
+class Clustering:
+    def __init__(self, bound_form, df):
+        self.bound_form = bound_form
+        self.df = df
+        self.alg = None
+
+    def calculate_modularity(self):
+        return self.alg.clusters_data.calculate_modularity(self.alg.start_graph)
+
+    def calculate_clustering_result(self):
         x, y, features = k_mxt_w3.data.DataPropertyImportSpace.get_data(
-            df=df,
-            name_latitude_cols=bound_form.cleaned_data['latitude'],
-            name_longitude_cols=bound_form.cleaned_data['longitude'],
-            features_list=bound_form.cleaned_data['features'],
+            df=self.df,
+            name_latitude_cols=self.bound_form.cleaned_data['latitude'],
+            name_longitude_cols=self.bound_form.cleaned_data['longitude'],
+            features_list=self.bound_form.cleaned_data['features'],
         )
         clusters = k_mxt_w3.clusters_data.ClustersDataSpaceFeatures(
             x_init=x,
@@ -56,32 +62,34 @@ def clustering(df, bound_form):
             metrics='euclidean',
         )
         algorithm = None
-        if bound_form.cleaned_data['algorithm'] == 'k_mxt_w3':
+        if self.bound_form.cleaned_data['algorithm'] == 'k_mxt_w3':
             algorithm = k_mxt_w3.clustering_algorithms.K_MXT_gauss
-        elif bound_form.cleaned_data['algorithm'] == 'k_mxt':
+        elif self.bound_form.cleaned_data['algorithm'] == 'k_mxt':
             algorithm = k_mxt_w3.clustering_algorithms.K_MXT
-        alg = algorithm(k=bound_form.cleaned_data['k'],
-                        eps=bound_form.cleaned_data['eps'],
-                        clusters_data=clusters)
-        alg()
-        modularity = alg.clusters_data.calculate_modularity(alg.start_graph)
-        clustering_result = alg.clusters_data.cluster_numbers
-        fig = px.scatter_mapbox(df,
-                                lat=bound_form.cleaned_data['latitude'],
-                                lon=bound_form.cleaned_data['longitude'],
-                                hover_name=clusters.cluster_numbers,
-                                hover_data=bound_form.cleaned_data['features'],
-                                color=clusters.cluster_numbers,
-                                zoom=5,
-                                height=1000,
-                                color_continuous_scale=px.colors.cyclical.HSV,
-                                )
+        self.alg = algorithm(
+            k=self.bound_form.cleaned_data['k'],
+            eps=self.bound_form.cleaned_data['eps'],
+            clusters_data=clusters,
+        )
+        self.alg()
+        return self.alg.clusters_data.cluster_numbers
+
+    def build_clusters(self):
+        fig = px.scatter_mapbox(
+            self.df,
+            lat=self.bound_form.cleaned_data['latitude'],
+            lon=self.bound_form.cleaned_data['longitude'],
+            hover_name=self.alg.clusters_data.cluster_numbers,
+            hover_data=self.bound_form.cleaned_data['features'],
+            color=self.alg.clusters_data.cluster_numbers,
+            zoom=5,
+            height=1000,
+            color_continuous_scale=px.colors.cyclical.HSV,
+        )
         fig.update_layout(mapbox_style="open-street-map")
         fig.update_layout(margin={"r": 0, "t": 0, "l": 0, "b": 0})
         plt_clusters = plot(fig, output_type='div', show_link=False, link_text='', )
-    except Exception as e:
-        raise
-    return plt_clusters, modularity, clustering_result
+        return plt_clusters
 
 
 class AlgorithmView(LoginRequiredMixin, View):
@@ -117,8 +125,11 @@ class AlgorithmView(LoginRequiredMixin, View):
             choices = [(x, x) for x in columns]
             bound_form = AlgorithmForm(choices, request.POST)
             if bound_form.is_valid():
+                clustering = Clustering(df=df, bound_form=bound_form)
                 plt_2d = build_2d(df, bound_form)
-                plt_clusters, modularity, clustering_result = clustering(df, bound_form)
+                clustering_result = clustering.calculate_clustering_result()
+                plt_clusters = clustering.build_clusters()
+                modularity = clustering.calculate_modularity()
                 return render(request, self.template,
                               context={'form': bound_form,
                                        'is_visible': True,
