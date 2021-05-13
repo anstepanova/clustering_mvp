@@ -6,6 +6,7 @@ from django.views.decorators.csrf import csrf_exempt
 import pandas as pd
 import plotly.express as px
 from plotly.offline import plot
+import numpy as np
 import k_mxt_w3
 
 
@@ -47,6 +48,11 @@ class Clustering:
 
     def calculate_modularity(self):
         return self.alg.clusters_data.calculate_modularity(self.alg.start_graph)
+
+    def save_clustering_result_in_file(self):
+        if self.alg is None:
+            raise AttributeError('clustering result is not calculated')
+        np.savetxt(f'clustering_result.csv', self.alg.clusters_data.cluster_numbers, delimiter=",")
 
     def calculate_clustering_result(self):
         x, y, features = k_mxt_w3.data.DataPropertyImportSpace.get_data(
@@ -95,9 +101,8 @@ class Clustering:
 class AlgorithmView(LoginRequiredMixin, View):
     template = 'clustering/clustering.html'
     form_model = FileForm
-    raise_exception = True
-    login_url = '/accounts/login/'
     raise_exception = False
+    login_url = '/accounts/login/'
 
     @csrf_exempt
     def get(self, request):
@@ -117,7 +122,7 @@ class AlgorithmView(LoginRequiredMixin, View):
                 request.session['df'] = df.to_json()
                 calculate_form = AlgorithmForm(choices, request.POST)
                 self.form_model = AlgorithmForm
-                return render(request, self.template, context={'form': calculate_form, 'is_visible': True})
+                return render(request, self.template, context={'form': calculate_form, 'is_visible': True, 'not_show': True})
         elif '_calculate' in request.POST:
             df_json = request.session.get('df', ())
             df = pd.read_json(df_json)
@@ -128,6 +133,7 @@ class AlgorithmView(LoginRequiredMixin, View):
                 clustering = Clustering(df=df, bound_form=bound_form)
                 plt_2d = build_2d(df, bound_form)
                 clustering_result = clustering.calculate_clustering_result()
+                clustering.save_clustering_result_in_file()
                 plt_clusters = clustering.build_clusters()
                 modularity = clustering.calculate_modularity()
                 return render(request, self.template,
