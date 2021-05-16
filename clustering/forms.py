@@ -10,20 +10,32 @@ class FileForm(forms.Form):
 
 
 class AlgorithmForm(forms.Form):
-    k = forms.IntegerField(label='k', widget=forms.NumberInput(attrs={'class': 'form-control'}),
-                           validators=[MinValueValidator(1)],
-                           required=True,
-                           initial=5,
-                           )
-    eps = forms.FloatField(label='eps', widget=forms.NumberInput(attrs={'class': 'form-control'}),
-                           validators=[MinValueValidator(0)],
-                           required=True,
-                           initial=0.05,
-                           )
-    algorithm = forms.ChoiceField(label='algorithm', choices=[('k_mxt_w3', 'k-MXT-W'), ('k_mxt', 'k-MXT')],
-                                  widget=forms.Select(attrs={'class': 'form-control'}),
-                                  required=True,
-                                  )
+    k = forms.IntegerField(
+        label='k',
+        widget=forms.NumberInput(attrs={'class': 'form-control'}),
+        validators=[MinValueValidator(1)],
+        required=True,
+        initial=5,
+    )
+    eps = forms.FloatField(
+        label='eps',
+        widget=forms.NumberInput(attrs={'class': 'form-control'}),
+        validators=[MinValueValidator(0)],
+        required=True,
+        initial=0.05,
+    )
+    algorithm = forms.ChoiceField(
+        label='algorithm',
+        choices=[('k_mxt_w3', 'k-MXT-W'), ('k_mxt', 'k-MXT')],
+        widget=forms.Select(attrs={'class': 'form-control'}),
+        required=True,
+    )
+    metric = forms.ChoiceField(
+        label='metric',
+        choices=[('euclidean', 'euclidean'), ('manhattan', 'manhattan')],
+        widget=forms.Select(attrs={'class': 'form-control'}),
+        required=True,
+    )
 
     def __init__(self, choices, *args, **kwargs):
         self.choices = choices

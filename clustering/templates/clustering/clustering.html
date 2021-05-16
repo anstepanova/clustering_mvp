@@ -8,6 +8,20 @@
     <form class="needs-validation" method="post" enctype="multipart/form-data">
         {% csrf_token %}
         {% if not is_visible %}
+            {% if form.errors and not_show is null %}
+                {% for field in form %}
+                    {% for error in field.errors %}
+                        <div class="alert alert-danger">
+                            <strong>{{ field.name }}: {{ error|escape }}</strong>
+                        </div>
+                    {% endfor %}
+                {% endfor %}
+                {% for error in form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        <strong>{{ error|escape }}</strong>
+                    </div>
+                {% endfor %}
+            {% endif %}
             <div class="form-row">
                 <div class="input-group">
                   <div class="custom-file">
@@ -59,6 +73,10 @@
                  <div class="col-md-2 mb-3">
                         <label for="algorithm">{{form.algorithm.label}}</label>
                         {{ form.algorithm }}
+                 </div>
+                 <div class="col-md-2 mb-3">
+                        <label for="metric">{{form.metric.label}}</label>
+                        {{ form.metric }}
                  </div>
             </div>
             <div class="form-row form-check-inline">

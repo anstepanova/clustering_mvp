@@ -71,7 +71,7 @@ class Clustering:
             x_init=x,
             y_init=y,
             features_init=features,
-            metrics='euclidean',
+            metrics=self.bound_form.cleaned_data['metric'],
         )
         algorithm = None
         if self.bound_form.cleaned_data['algorithm'] == 'k_mxt_w3':
@@ -113,7 +113,7 @@ class AlgorithmView(LoginRequiredMixin, View):
     @csrf_exempt
     def get(self, request):
         form = self.form_model(request.GET, initial={'k': '5', 'eps': 0.05})
-        return render(request, self.template, context={'form': form, 'is_visible': False})
+        return render(request, self.template, context={'form': form, 'is_visible': False, 'not_show': True})
 
     @csrf_exempt
     def post(self, request):

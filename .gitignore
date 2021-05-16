@@ -134,4 +134,5 @@ clusteringengine/config*
 clusteringengine/__init__.py
 clustering/__init__.py
 clustering/clustering/migrations
+test/*
 
